@@ -66,6 +66,40 @@ class Vettryx_Core {
 
         // 3. Declaração de conformidade com a API de Consentimento
         add_action( 'plugins_loaded', [ $this, 'register_consent_api' ] );
+
+        // 4. Inicializa o sistema de atualização automática (GitHub)
+        add_action( 'plugins_loaded', [ $this, 'init_update_checker' ] );
+    }
+
+    /**
+     * Inicializa o Plugin Update Checker (GitHub)
+     */
+    public function init_update_checker() {
+        $puc_file = plugin_dir_path( __FILE__ ) . 'plugin-update-checker/plugin-update-checker.php';
+
+        if ( file_exists( $puc_file ) ) {
+            require_once $puc_file;
+            
+            $this->update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+                'https://github.com/vettryx/vettryx-wp-core',
+                __FILE__,
+                'vettryx-wp-core'
+            );
+            
+            // ATENÇÃO: Se o repositório do Core estiver privado, o WP precisará de autorização para ler as releases.
+            // $this->update_checker->setAuthentication('COLE_SEU_TOKEN_AQUI');
+
+            // Adiciona a logo VETTRYX na lista de plugins
+            $this->update_checker->addResultFilter( function ( $info ) {
+                if ( isset( $info->icons ) ) {
+                    $info->icons = [
+                        '1x' => plugin_dir_url( __FILE__ ) . 'assets/icon-128x128.png',
+                        '2x' => plugin_dir_url( __FILE__ ) . 'assets/icon-256x256.png',
+                    ];
+                }
+                return $info;
+            } );
+        }
     }
 
     /**
