@@ -35,7 +35,18 @@ jobs:
 
       - name: Empacota o Plugin VETTRYX WP Core
         run: |
-          zip -r vettryx-wp-core.zip . -x "*.git*" -x ".github/*" -x "README.md" -x ".gitignore"
+          # 1. Cria a pasta exigida pelo WordPress
+          mkdir vettryx-wp-core
+          
+          # 2. Joga tudo o que importa lá para dentro
+          cp vettryx-wp-core.php vettryx-wp-core/
+          cp -r assets/ vettryx-wp-core/
+          cp -r includes/ vettryx-wp-core/
+          cp -r modules/ vettryx-wp-core/
+          cp -r plugin-update-checker/ vettryx-wp-core/
+          
+          # 3. Zipa a pasta pronta (e não os arquivos soltos)
+          zip -r vettryx-wp-core.zip vettryx-wp-core/
 
       - name: Publica a Release Oficial
         uses: softprops/action-gh-release@v2
