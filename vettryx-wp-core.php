@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: VETTRYX WP Core
- * Plugin URI: https://github.com/vettryx/vettryx-wp-core
+ * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Sistema central de ferramentas e módulos da VETTRYX Tech.
- * Version: 1.0.0
- * Author: VETTRYX Tech
+ * Version:     1.0.0
+ * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
  * License:     GPLv3
@@ -35,6 +35,7 @@ if (file_exists($puc_file)) {
 }
 // --- FIM DA ATUALIZAÇÃO AUTOMÁTICA ---
 
+
 class Vettryx_Core {
 
     // Nome da chave que vai salvar os dados no banco (wp_options)
@@ -51,6 +52,17 @@ class Vettryx_Core {
         // 2. Hooks para criar o menu no painel de administração
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_init', [ $this, 'save_modules_state' ] );
+
+        // 3. Declaração de conformidade com a API de Consentimento
+        add_action( 'plugins_loaded', [ $this, 'register_consent_api' ] );
+    }
+
+    /**
+     * Declaração de conformidade com a WP Consent API (LGPD/GDPR)
+     */
+    public function register_consent_api() {
+        $plugin_slug = plugin_basename( __FILE__ );
+        add_filter( "wp_consent_api_registered_{$plugin_slug}", '__return_true' );
     }
 
     /**
@@ -77,7 +89,7 @@ class Vettryx_Core {
             'manage_options',              // Capacidade (só admin vê)
             'vettryx-core-modules',        // Slug da URL
             [ $this, 'render_admin_page' ],// Função que desenha a tela
-            'dashicons-superhero',         // Ícone bonitão
+            'dashicons-superhero',         // Ícone
             80                             // Posição no menu
         );
     }
@@ -118,8 +130,8 @@ class Vettryx_Core {
         $active_modules    = get_option( $this->option_name, [] );
         ?>
         <div class="wrap">
-            <h1>VETTRYX Tech - Gerenciamento de Ferramentas</h1>
-            <p>Ative ou desative os módulos contratados para este site.</p>
+            <h1><?php _e( 'VETTRYX Tech - Gerenciamento de Ferramentas', 'vettryx-wp-core' ); ?></h1>
+            <p><?php _e( 'Ative ou desative os módulos contratados para este site.', 'vettryx-wp-core' ); ?></p>
             
             <form method="post" action="options.php">
                 <?php 
@@ -130,7 +142,7 @@ class Vettryx_Core {
                 <table class="form-table">
                     <tbody>
                         <tr>
-                            <th scope="row">Módulos Disponíveis</th>
+                            <th scope="row"><?php _e( 'Módulos Disponíveis', 'vettryx-wp-core' ); ?></th>
                             <td>
                                 <fieldset>
                                     <?php foreach ( $available_modules as $module ) : ?>
@@ -138,7 +150,7 @@ class Vettryx_Core {
                                         <label style="display: block; margin-bottom: 10px;">
                                             <input type="checkbox" name="<?php echo esc_attr( $this->option_name ); ?>[]" value="<?php echo esc_attr( $module['path'] ); ?>" <?php echo $checked; ?>>
                                             <strong><?php echo esc_html( $module['name'] ); ?></strong> 
-                                            <br><span style="color: #666; font-size: 12px;">Caminho: <?php echo esc_html( $module['path'] ); ?></span>
+                                            <br><span style="color: #666; font-size: 12px;"><?php _e( 'Caminho:', 'vettryx-wp-core' ); ?> <?php echo esc_html( $module['path'] ); ?></span>
                                         </label>
                                     <?php endforeach; ?>
                                 </fieldset>
@@ -146,7 +158,7 @@ class Vettryx_Core {
                         </tr>
                     </tbody>
                 </table>
-                <?php submit_button( 'Salvar Módulos' ); ?>
+                <?php submit_button( __( 'Salvar Módulos', 'vettryx-wp-core' ) ); ?>
             </form>
         </div>
         <?php
