@@ -15,41 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// --- INÍCIO DA ATUALIZAÇÃO AUTOMÁTICA (GITHUB) ---
-// Define o caminho exato do arquivo da biblioteca
-$puc_file = plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
-
-// Só executa a atualização se a pasta da biblioteca realmente existir
-if (file_exists($puc_file)) {
-    require $puc_file;
-    
-    $myUpdateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-        'https://github.com/vettryx/vettryx-wp-core',
-        __FILE__,
-        'vettryx-wp-core'
-    );
-    
-    // ATENÇÃO: Como o repositório do Core é privado, o WP precisará de autorização para ler as releases.
-    // Descomente a linha abaixo e insira um token (Fine-grained com permissão 'Contents: Read-only')
-    // $myUpdateChecker->setAuthentication('SEU_TOKEN_DE_LEITURA_AQUI');
-
-    // Se o repositório for privado, é recomendado usar o formato 'asset' para garantir que o download da atualização funcione corretamente.
-    $this->update_checker->getStrategy()->setDownloadUrlFormat('asset');
-
-    // Adiciona os ícones do plugin para aparecerem na lista de plugins do WordPress
-    $myUpdateChecker->addResultFilter(function ($info) {
-        if ( isset($info->icons) ) {
-            $info->icons = [
-                '1x' => plugin_dir_url(__FILE__) . 'assets/icon-128x128.png',
-                '2x' => plugin_dir_url(__FILE__) . 'assets/icon-256x256.png',
-            ];
-        }
-        return $info;
-    });
-}
-// --- FIM DA ATUALIZAÇÃO AUTOMÁTICA ---
-
-
 class Vettryx_Core {
 
     // Nome da chave que vai salvar os dados no banco (wp_options)
@@ -78,31 +43,46 @@ class Vettryx_Core {
      * Inicializa o Plugin Update Checker (GitHub)
      */
     public function init_update_checker() {
-        $puc_file = plugin_dir_path( __FILE__ ) . 'plugin-update-checker/plugin-update-checker.php';
 
-        if ( file_exists( $puc_file ) ) {
-            require_once $puc_file;
-            
-            $this->update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-                'https://github.com/vettryx/vettryx-wp-core',
-                __FILE__,
-                'vettryx-wp-core'
-            );
-            
-            // ATENÇÃO: Se o repositório do Core estiver privado, o WP precisará de autorização para ler as releases.
-            // $this->update_checker->setAuthentication('COLE_SEU_TOKEN_AQUI');
+        $puc_file = plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
 
-            // Adiciona a logo VETTRYX na lista de plugins
-            $this->update_checker->addResultFilter( function ( $info ) {
-                if ( isset( $info->icons ) ) {
-                    $info->icons = [
-                        '1x' => plugin_dir_url( __FILE__ ) . 'assets/icon-128x128.png',
-                        '2x' => plugin_dir_url( __FILE__ ) . 'assets/icon-256x256.png',
-                    ];
-                }
-                return $info;
-            } );
+        if (!file_exists($puc_file)) {
+            return;
         }
+
+        require_once $puc_file;
+
+        // Cria o verificador de updates
+        $this->update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+            'https://github.com/vettryx/vettryx-wp-core',
+            __FILE__,
+            'vettryx-wp-core'
+        );
+
+        // Se o repositório for privado, usar token
+        // $this->update_checker->setAuthentication('SEU_TOKEN_AQUI');
+
+        // FORÇA o uso do asset da release (vettryx-wp-core.zip)
+        $this->update_checker->getVcsApi()->enableReleaseAssets();
+
+        // Define qual asset baixar (se houver vários)
+        $this->update_checker->addFilter('github_release_asset', function($asset, $release){
+            if (isset($asset->name) && $asset->name === 'vettryx-wp-core.zip') {
+                return $asset;
+            }
+            return false;
+        });
+
+        // Adiciona ícones do plugin na lista do WP
+        $this->update_checker->addResultFilter(function ($info) {
+
+            $info->icons = [
+                '1x' => plugin_dir_url(__FILE__) . 'assets/icon-128x128.png',
+                '2x' => plugin_dir_url(__FILE__) . 'assets/icon-256x256.png',
+            ];
+
+            return $info;
+        });
     }
 
     /**
