@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Sistema central de ferramentas e módulos da VETTRYX Tech.
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
@@ -94,13 +94,16 @@ class Vettryx_Core {
      * Cria o menu lateral "VETTRYX Tech" no WordPress
      */
     public function add_admin_menu() {
+
+        $vettryx_icon = require plugin_dir_path( __FILE__ ) . 'includes/menu-icon.php';
+
         add_menu_page(
             'VETTRYX Tech - Módulos',                             // Título da página
             'VETTRYX Tech',                                       // Nome no menu lateral
             'manage_options',                                     // Capacidade (só admin vê)
             'vettryx-core-modules',                               // Slug da URL
             [ $this, 'render_admin_page' ],                       // Função que desenha a tela
-            plugin_dir_url( __FILE__ ) . 'assets/menu-icon.svg',  // Ícone
+            'data:image/svg+xml;base64,' . $vettryx_icon,         // Ícone
             80                                                    // Posição no menu
         );
     }
