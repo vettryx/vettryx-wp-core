@@ -95,13 +95,13 @@ class Vettryx_Core {
      */
     public function add_admin_menu() {
         add_menu_page(
-            'VETTRYX Tech - Módulos',      // Título da página
-            'VETTRYX Tech',                // Nome no menu lateral
-            'manage_options',              // Capacidade (só admin vê)
-            'vettryx-core-modules',        // Slug da URL
-            [ $this, 'render_admin_page' ],// Função que desenha a tela
-            'dashicons-superhero',         // Ícone
-            80                             // Posição no menu
+            'VETTRYX Tech - Módulos',                             // Título da página
+            'VETTRYX Tech',                                       // Nome no menu lateral
+            'manage_options',                                     // Capacidade (só admin vê)
+            'vettryx-core-modules',                               // Slug da URL
+            [ $this, 'render_admin_page' ],                       // Função que desenha a tela
+            plugin_dir_url( __FILE__ ) . 'assets/menu-icon.svg',  // Ícone
+            80                                                    // Posição no menu
         );
     }
 
