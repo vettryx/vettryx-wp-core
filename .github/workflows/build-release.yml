@@ -35,10 +35,7 @@ jobs:
 
       - name: Empacota o Plugin VETTRYX WP Core
         run: |
-          mkdir build
-          rsync -av --exclude='.git*' --exclude='.github' ./ build/vettryx-wp-core
-          cd build
-          zip -r vettryx-wp-core.zip vettryx-wp-core
+          zip -r vettryx-wp-core.zip . -x "*.git*" -x ".github/*" -x "README.md" -x ".gitignore"
 
       - name: Publica a Release Oficial
         uses: softprops/action-gh-release@v2
