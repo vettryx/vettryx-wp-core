@@ -44,7 +44,7 @@ class Vettryx_Core {
      */
     public function init_update_checker() {
 
-        $puc_file = plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
+        $puc_file = plugin_dir_path(__FILE__) . 'vendor/plugin-update-checker/plugin-update-checker.php';
 
         if (!file_exists($puc_file)) {
             return;
