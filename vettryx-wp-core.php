@@ -32,6 +32,17 @@ if (file_exists($puc_file)) {
     // ATENÇÃO: Como o repositório do Core é privado, o WP precisará de autorização para ler as releases.
     // Descomente a linha abaixo e insira um token (Fine-grained com permissão 'Contents: Read-only')
     // $myUpdateChecker->setAuthentication('SEU_TOKEN_DE_LEITURA_AQUI');
+
+    // Adiciona os ícones do plugin para aparecerem na lista de plugins do WordPress
+    $myUpdateChecker->addResultFilter(function ($info) {
+        if ( isset($info->icons) ) {
+            $info->icons = [
+                '1x' => plugin_dir_url(__FILE__) . 'assets/icon-128x128.png',
+                '2x' => plugin_dir_url(__FILE__) . 'assets/icon-256x256.png',
+            ];
+        }
+        return $info;
+    });
 }
 // --- FIM DA ATUALIZAÇÃO AUTOMÁTICA ---
 
