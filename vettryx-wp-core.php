@@ -33,6 +33,9 @@ if (file_exists($puc_file)) {
     // Descomente a linha abaixo e insira um token (Fine-grained com permissão 'Contents: Read-only')
     // $myUpdateChecker->setAuthentication('SEU_TOKEN_DE_LEITURA_AQUI');
 
+    // Se o repositório for privado, é recomendado usar o formato 'asset' para garantir que o download da atualização funcione corretamente.
+    $this->update_checker->getStrategy()->setDownloadUrlFormat('asset');
+
     // Adiciona os ícones do plugin para aparecerem na lista de plugins do WordPress
     $myUpdateChecker->addResultFilter(function ($info) {
         if ( isset($info->icons) ) {

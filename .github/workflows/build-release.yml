@@ -33,9 +33,14 @@ jobs:
           VERSION=$(grep -i "Version:" vettryx-wp-core.php | head -n 1 | awk -F':' '{print $2}' | xargs)
           echo "PLUGIN_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Empacota o Plugin VETTRYX WP Core (Gera o ZIP limpo)
+      - name: Empacota o Plugin VETTRYX WP Core
         run: |
-          zip -r vettryx-wp-core.zip . -x "*.git*" -x ".github/*" -x "README.md" -x ".gitignore"
+          # Cria uma pasta temporária com o nome do slug
+          mkdir vettryx-wp-core
+          # Copia tudo para dentro dela, exceto o que não queremos
+          rsync -rr . vettryx-wp-core/ --exclude ".git*" --exclude ".github" --exclude "vettryx-wp-core" --exclude "vettryx-wp-core.zip"
+          # Gera o ZIP a partir dessa pasta
+          zip -r vettryx-wp-core.zip vettryx-wp-core/
 
       - name: Publica a Release Oficial
         uses: softprops/action-gh-release@v2
