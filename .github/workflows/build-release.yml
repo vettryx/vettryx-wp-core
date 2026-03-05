@@ -26,7 +26,7 @@ jobs:
           git commit -am "chore: atualizando módulos via automação [skip ci]" || echo "Nenhuma mudança nos módulos"
           git push || echo "Nada para fazer push"
 
-      - name: Empacota o Plugin VETTRYX Core (Gera o ZIP limpo)
+      - name: Empacota o Plugin VETTRYX WP Core (Gera o ZIP limpo)
         run: |
           zip -r vettryx-wp-core.zip . -x "*.git*" -x ".github/*" -x "README.md" -x ".gitignore"
 
@@ -35,4 +35,4 @@ jobs:
         with:
           files: vettryx-wp-core.zip
           tag_name: "v1.0.${{ github.run_number }}"
-          name: "VETTRYX Core - Atualização #${{ github.run_number }}"
+          name: "VETTRYX WP Core - Atualização #${{ github.run_number }}"
