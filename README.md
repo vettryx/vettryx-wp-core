@@ -1,0 +1,1 @@
+# vettryx-wp-core
