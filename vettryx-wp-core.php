@@ -15,6 +15,26 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// --- INÍCIO DA ATUALIZAÇÃO AUTOMÁTICA (GITHUB) ---
+// Define o caminho exato do arquivo da biblioteca
+$puc_file = plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
+
+// Só executa a atualização se a pasta da biblioteca realmente existir
+if (file_exists($puc_file)) {
+    require $puc_file;
+    
+    $myUpdateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/vettryx/vettryx-wp-core',
+        __FILE__,
+        'vettryx-wp-core'
+    );
+    
+    // ATENÇÃO: Como o repositório do Core é privado, o WP precisará de autorização para ler as releases.
+    // Descomente a linha abaixo e insira um token (Fine-grained com permissão 'Contents: Read-only')
+    // $myUpdateChecker->setAuthentication('SEU_TOKEN_DE_LEITURA_AQUI');
+}
+// --- FIM DA ATUALIZAÇÃO AUTOMÁTICA ---
+
 class Vettryx_Core {
 
     // Nome da chave que vai salvar os dados no banco (wp_options)
