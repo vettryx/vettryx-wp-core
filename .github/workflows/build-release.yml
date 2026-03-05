@@ -1,0 +1,38 @@
+name: Build and Release Core
+
+on:
+  repository_dispatch:
+    types: [update-modules] # Evento customizado para ser disparado por outros workflows (ex: quando um módulo é atualizado)
+  workflow_dispatch: # Permite disparar manualmente a partir da interface do GitHub Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permissão para ler e escrever no repositório, necessária para atualizar submódulos e criar releases
+
+    steps:
+      - name: Baixa o código do Core e os Módulos
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.GITHUB_TOKEN }} # Token para acessar o repositório e os submódulos privados
+
+      - name: Puxa as últimas atualizações dos módulos
+        run: |
+          git submodule update --remote --merge
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: atualizando módulos via automação [skip ci]" || echo "Nenhuma mudança nos módulos"
+          git push || echo "Nada para fazer push"
+
+      - name: Empacota o Plugin VETTRYX Core (Gera o ZIP limpo)
+        run: |
+          zip -r vettryx-wp-core.zip . -x "*.git*" -x ".github/*" -x "README.md" -x ".gitignore"
+
+      - name: Publica a Release Oficial
+        uses: softprops/action-gh-release@v2
+        with:
+          files: vettryx-wp-core.zip
+          tag_name: "v1.0.${{ github.run_number }}"
+          name: "VETTRYX Core - Atualização #${{ github.run_number }}"
