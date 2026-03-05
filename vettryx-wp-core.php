@@ -3,39 +3,36 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Sistema central de ferramentas e módulos da VETTRYX Tech.
- * Version:     1.0.1
+ * Version:     1.0.2
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
  * License:     GPLv3
  */
 
-// Segurança: Impede o acesso direto ao arquivo
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
 class Vettryx_Core {
 
-    // Nome da chave que vai salvar os dados no banco (wp_options)
     private $option_name = 'vettryx_active_modules';
     private $modules_dir;
 
+    // CORREÇÃO DO PHP 8.2+
+    private $update_checker = null;
+
     public function __construct() {
-        // Define o caminho absoluto da pasta modules
+
         $this->modules_dir = plugin_dir_path( __FILE__ ) . 'modules/';
 
-        // 1. Carrega os módulos ativos assim que os plugins são iniciados
         add_action( 'plugins_loaded', [ $this, 'load_active_modules' ] );
 
-        // 2. Hooks para criar o menu no painel de administração
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_init', [ $this, 'save_modules_state' ] );
 
-        // 3. Declaração de conformidade com a API de Consentimento
         add_action( 'plugins_loaded', [ $this, 'register_consent_api' ] );
 
-        // 4. Inicializa o sistema de atualização automática (GitHub)
         add_action( 'plugins_loaded', [ $this, 'init_update_checker' ] );
     }
 
@@ -52,20 +49,17 @@ class Vettryx_Core {
 
         require_once $puc_file;
 
-        // Cria o verificador de updates
-        $this->update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-            'https://github.com/vettryx/vettryx-wp-core',
-            __FILE__,
-            'vettryx-wp-core'
-        );
+        $this->update_checker =
+            \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+                'https://github.com/vettryx/vettryx-wp-core',
+                __FILE__,
+                'vettryx-wp-core'
+            );
 
-        // Se o repositório for privado, usar token
         // $this->update_checker->setAuthentication('SEU_TOKEN_AQUI');
 
-        // FORÇA o uso do asset da release (vettryx-wp-core.zip)
         $this->update_checker->getVcsApi()->enableReleaseAssets();
 
-        // Define qual asset baixar (se houver vários)
         $this->update_checker->addFilter('github_release_asset', function($asset, $release){
             if (isset($asset->name) && $asset->name === 'vettryx-wp-core.zip') {
                 return $asset;
@@ -73,7 +67,6 @@ class Vettryx_Core {
             return false;
         });
 
-        // Adiciona ícones do plugin na lista do WP
         $this->update_checker->addResultFilter(function ($info) {
 
             $info->icons = [
@@ -86,7 +79,7 @@ class Vettryx_Core {
     }
 
     /**
-     * Declaração de conformidade com a WP Consent API (LGPD/GDPR)
+     * Declaração de conformidade com a WP Consent API
      */
     public function register_consent_api() {
         $plugin_slug = plugin_basename( __FILE__ );
@@ -94,13 +87,16 @@ class Vettryx_Core {
     }
 
     /**
-     * Dá o require_once APENAS nos módulos que o cliente ativou
+     * Carrega apenas módulos ativos
      */
     public function load_active_modules() {
+
         $active_modules = get_option( $this->option_name, [] );
 
         foreach ( $active_modules as $module_path ) {
+
             $full_path = plugin_dir_path( __FILE__ ) . $module_path;
+
             if ( file_exists( $full_path ) ) {
                 require_once $full_path;
             }
@@ -108,113 +104,164 @@ class Vettryx_Core {
     }
 
     /**
-     * Cria o menu lateral "VETTRYX Tech" no WordPress
+     * Menu admin
      */
     public function add_admin_menu() {
 
-        $vettryx_icon = require plugin_dir_path( __FILE__ ) . 'includes/menu-icon.php';
+        $icon_path = plugin_dir_path( __FILE__ ) . 'includes/menu-icon.php';
+
+        $vettryx_icon = '';
+
+        if (file_exists($icon_path)) {
+            $vettryx_icon = require $icon_path;
+        }
 
         add_menu_page(
-            'VETTRYX Tech - Módulos',                             // Título da página
-            'VETTRYX Tech',                                       // Nome no menu lateral
-            'manage_options',                                     // Capacidade (só admin vê)
-            'vettryx-core-modules',                               // Slug da URL
-            [ $this, 'render_admin_page' ],                       // Função que desenha a tela
-            'data:image/svg+xml;base64,' . $vettryx_icon,         // Ícone
-            80                                                    // Posição no menu
+            'VETTRYX Tech - Módulos',
+            'VETTRYX Tech',
+            'manage_options',
+            'vettryx-core-modules',
+            [ $this, 'render_admin_page' ],
+            $vettryx_icon ? 'data:image/svg+xml;base64,' . $vettryx_icon : 'dashicons-admin-generic',
+            80
         );
     }
 
     /**
-     * Varre a pasta /modules/ e encontra os plugins lá dentro
+     * Detecta módulos disponíveis
      */
     private function get_available_modules() {
+
         $modules = [];
-        // Pega todas as pastas dentro de modules/
+
         $dirs = glob( $this->modules_dir . '*', GLOB_ONLYDIR );
-        
-        if ( ! $dirs ) return $modules;
+
+        if ( ! $dirs ) {
+            return $modules;
+        }
 
         foreach ( $dirs as $dir ) {
-            // Pega todos os arquivos .php na raiz dessa pasta
+
             $files = glob( $dir . '/*.php' );
+
             foreach ( $files as $file ) {
-                // Lê as primeiras linhas para achar o nome do plugin
+
                 $content = file_get_contents( $file, false, null, 0, 8192 );
+
                 if ( preg_match( '/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $content, $match ) ) {
+
                     $modules[] = [
                         'name' => trim( $match[1] ),
                         'path' => str_replace( plugin_dir_path( __FILE__ ), '', $file )
                     ];
-                    break; // Achou o arquivo principal, vai pro próximo diretório
+
+                    break;
                 }
             }
         }
+
         return $modules;
     }
 
     /**
-     * Desenha a interface do painel (HTML puro)
+     * Tela admin
      */
     public function render_admin_page() {
+
         $available_modules = $this->get_available_modules();
         $active_modules    = get_option( $this->option_name, [] );
         ?>
+
         <div class="wrap">
+
             <h1><?php _e( 'VETTRYX Tech - Gerenciamento de Ferramentas', 'vettryx-wp-core' ); ?></h1>
+
             <p><?php _e( 'Ative ou desative os módulos contratados para este site.', 'vettryx-wp-core' ); ?></p>
-            
+
             <form method="post" action="options.php">
-                <?php 
-                // Segurança do WordPress para formulários
-                settings_fields( 'vettryx_modules_group' ); 
-                ?>
-                
+
+                <?php settings_fields( 'vettryx_modules_group' ); ?>
+
                 <table class="form-table">
                     <tbody>
+
                         <tr>
+
                             <th scope="row"><?php _e( 'Módulos Disponíveis', 'vettryx-wp-core' ); ?></th>
+
                             <td>
+
                                 <fieldset>
+
                                     <?php foreach ( $available_modules as $module ) : ?>
+
                                         <?php $checked = in_array( $module['path'], $active_modules ) ? 'checked="checked"' : ''; ?>
-                                        <label style="display: block; margin-bottom: 10px;">
-                                            <input type="checkbox" name="<?php echo esc_attr( $this->option_name ); ?>[]" value="<?php echo esc_attr( $module['path'] ); ?>" <?php echo $checked; ?>>
-                                            <strong><?php echo esc_html( $module['name'] ); ?></strong> 
-                                            <br><span style="color: #666; font-size: 12px;"><?php _e( 'Caminho:', 'vettryx-wp-core' ); ?> <?php echo esc_html( $module['path'] ); ?></span>
+
+                                        <label style="display:block;margin-bottom:10px;">
+
+                                            <input
+                                                type="checkbox"
+                                                name="<?php echo esc_attr( $this->option_name ); ?>[]"
+                                                value="<?php echo esc_attr( $module['path'] ); ?>"
+                                                <?php echo $checked; ?>
+                                            >
+
+                                            <strong><?php echo esc_html( $module['name'] ); ?></strong>
+
+                                            <br>
+
+                                            <span style="color:#666;font-size:12px;">
+                                                Caminho: <?php echo esc_html( $module['path'] ); ?>
+                                            </span>
+
                                         </label>
+
                                     <?php endforeach; ?>
+
                                 </fieldset>
+
                             </td>
+
                         </tr>
+
                     </tbody>
                 </table>
-                <?php submit_button( __( 'Salvar Módulos', 'vettryx-wp-core' ) ); ?>
+
+                <?php submit_button( 'Salvar Módulos' ); ?>
+
             </form>
+
         </div>
+
         <?php
     }
 
     /**
-     * Registra a variável no banco de dados para o formulário funcionar
+     * Registra opção
      */
     public function save_modules_state() {
-        register_setting( 'vettryx_modules_group', $this->option_name, [
-            'type'              => 'array',
-            'sanitize_callback' => [ $this, 'sanitize_modules_array' ]
-        ] );
+
+        register_setting(
+            'vettryx_modules_group',
+            $this->option_name,
+            [
+                'type'              => 'array',
+                'sanitize_callback' => [ $this, 'sanitize_modules_array' ]
+            ]
+        );
     }
 
     /**
-     * Limpa os dados antes de salvar (Segurança contra injeção de código)
+     * Sanitização
      */
     public function sanitize_modules_array( $input ) {
+
         if ( ! is_array( $input ) ) {
             return [];
         }
+
         return array_map( 'sanitize_text_field', $input );
     }
 }
 
-// Inicia a máquina
 new Vettryx_Core();
