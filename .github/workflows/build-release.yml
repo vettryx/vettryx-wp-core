@@ -33,13 +33,19 @@ jobs:
           VERSION=$(grep -i "Version:" vettryx-wp-core.php | head -n 1 | awk -F':' '{print $2}' | xargs)
           echo "PLUGIN_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Empacota o Plugin VETTRYX WP Core
+      - name: Empacota o Plugin VETTRYX WP Core (Estrutura Correta)
         run: |
-          # Cria uma pasta temporária com o nome do slug
+          # 1. Cria uma pasta limpa com o nome do slug
           mkdir vettryx-wp-core
-          # Copia tudo para dentro dela, exceto o que não queremos
-          rsync -rr . vettryx-wp-core/ --exclude ".git*" --exclude ".github" --exclude "vettryx-wp-core" --exclude "vettryx-wp-core.zip"
-          # Gera o ZIP a partir dessa pasta
+          
+          # 2. Copia os arquivos necessários (incluindo o novo includes/)
+          cp vettryx-wp-core.php vettryx-wp-core/
+          cp -r assets/ vettryx-wp-core/
+          cp -r includes/ vettryx-wp-core/
+          cp -r modules/ vettryx-wp-core/
+          cp -r plugin-update-checker/ vettryx-wp-core/
+          
+          # 3. Gera o ZIP a partir dessa pasta
           zip -r vettryx-wp-core.zip vettryx-wp-core/
 
       - name: Publica a Release Oficial
