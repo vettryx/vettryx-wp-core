@@ -2,21 +2,21 @@ name: Build and Release Core
 
 on:
   repository_dispatch:
-    types: [update-modules] # Evento customizado para ser disparado por outros workflows (ex: quando um módulo é atualizado)
-  workflow_dispatch: # Permite disparar manualmente a partir da interface do GitHub Actions
+    types: [update-modules]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Permissão para ler e escrever no repositório, necessária para atualizar submódulos e criar releases
+      contents: write 
 
     steps:
       - name: Baixa o código do Core e os Módulos
         uses: actions/checkout@v4
         with:
           submodules: true
-          token: ${{ secrets.GITHUB_TOKEN }} # Token para acessar o repositório e os submódulos privados
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Puxa as últimas atualizações dos módulos
         run: |
@@ -26,6 +26,13 @@ jobs:
           git commit -am "chore: atualizando módulos via automação [skip ci]" || echo "Nenhuma mudança nos módulos"
           git push || echo "Nada para fazer push"
 
+      - name: Extrai a Versão do Plugin do PHP
+        id: extract_version
+        run: |
+          # Lê o arquivo PHP, acha a linha da versão, recorta só o número e salva na memória do robô
+          VERSION=$(grep -i "Version:" vettryx-wp-core.php | head -n 1 | awk -F':' '{print $2}' | xargs)
+          echo "PLUGIN_VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Empacota o Plugin VETTRYX WP Core (Gera o ZIP limpo)
         run: |
           zip -r vettryx-wp-core.zip . -x "*.git*" -x ".github/*" -x "README.md" -x ".gitignore"
@@ -34,5 +41,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: vettryx-wp-core.zip
-          tag_name: "v1.0.${{ github.run_number }}"
-          name: "VETTRYX WP Core - Atualização #${{ github.run_number }}"
+          tag_name: "v${{ env.PLUGIN_VERSION }}"
+          name: "VETTRYX WP Core - v${{ env.PLUGIN_VERSION }}"
