@@ -20,7 +20,7 @@ jobs:
 
       - name: Puxa as últimas atualizações dos módulos
         run: |
-          git submodule update --remote --merge
+          git submodule update --remote --checkout --force
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "chore: atualizando módulos via automação [skip ci]" || echo "Nenhuma mudança nos módulos"
