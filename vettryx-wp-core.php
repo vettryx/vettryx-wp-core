@@ -2,15 +2,15 @@
 /**
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
- * Description: Sistema central de ferramentas e módulos da VETTRYX Tech.
- * Version:     1.0.3
+ * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
+ * Version:     1.0.4
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
  * License:     GPLv3
  */
 
-// Segurança: Impede o acesso direto ao arquivo
+// Evita acesso direto ao arquivo
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -52,35 +52,25 @@ class Vettryx_Core {
 
         require_once $puc_file;
 
-        // Cria o verificador de updates
+        // Configura o PUC para apontar para o repositório correto no GitHub
         $this->update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
             'https://github.com/vettryx/vettryx-wp-core',
             __FILE__,
             'vettryx-wp-core'
         );
 
-        // Se o repositório for privado, usar token
-        // $this->update_checker->setAuthentication('SEU_TOKEN_AQUI');
+        // Define a branch que o PUC deve monitorar para atualizações (pode ser 'main', 'master' ou qualquer outra)
+        $this->update_checker->setBranch('main');
 
-        // FORÇA o uso do asset da release (vettryx-wp-core.zip)
+        // Habilita o suporte para arquivos de lançamento (release assets) no GitHub, permitindo que o PUC baixe o .zip do release automaticamente.
         $this->update_checker->getVcsApi()->enableReleaseAssets();
 
-        // Define qual asset baixar (se houver vários)
-        $this->update_checker->addFilter('github_release_asset', function($asset, $release){
-            if (isset($asset->name) && $asset->name === 'vettryx-wp-core.zip') {
-                return $asset;
-            }
-            return false;
-        });
-
-        // Adiciona ícones do plugin na lista do WP
+        // Adiciona um filtro para personalizar as informações do plugin exibidas na tela de atualizações, incluindo os ícones personalizados.
         $this->update_checker->addResultFilter(function ($info) {
-
             $info->icons = [
                 '1x' => plugin_dir_url(__FILE__) . 'assets/icon-128x128.png',
                 '2x' => plugin_dir_url(__FILE__) . 'assets/icon-256x256.png',
             ];
-
             return $info;
         });
     }
@@ -94,7 +84,7 @@ class Vettryx_Core {
     }
 
     /**
-     * Dá o require_once APENAS nos módulos que o cliente ativou
+     * Carrega os módulos ativos listados no banco de dados (wp_options)
      */
     public function load_active_modules() {
         $active_modules = get_option( $this->option_name, [] );
@@ -108,7 +98,7 @@ class Vettryx_Core {
     }
 
     /**
-     * Cria o menu lateral "VETTRYX Tech" no WordPress
+     * Adiciona um item de menu no painel de administração para gerenciar os módulos ativos
      */
     public function add_admin_menu() {
 
@@ -126,7 +116,7 @@ class Vettryx_Core {
     }
 
     /**
-     * Varre a pasta /modules/ e encontra os plugins lá dentro
+     * Busca os módulos disponíveis na pasta "modules" e retorna um array com nome e caminho de cada um
      */
     private function get_available_modules() {
         $modules = [];
@@ -154,7 +144,7 @@ class Vettryx_Core {
     }
 
     /**
-     * Desenha a interface do painel (HTML puro)
+     * Renderiza a página de administração onde o usuário pode ativar ou desativar os módulos disponíveis
      */
     public function render_admin_page() {
         $available_modules = $this->get_available_modules();
@@ -196,7 +186,7 @@ class Vettryx_Core {
     }
 
     /**
-     * Registra a variável no banco de dados para o formulário funcionar
+     * Registra a configuração para salvar os módulos ativos no banco de dados (wp_options)
      */
     public function save_modules_state() {
         register_setting( 'vettryx_modules_group', $this->option_name, [
@@ -206,7 +196,7 @@ class Vettryx_Core {
     }
 
     /**
-     * Limpa os dados antes de salvar (Segurança contra injeção de código)
+     * Função de sanitização para o array de módulos ativos, garantindo que apenas strings sejam salvas e evitando possíveis problemas de segurança
      */
     public function sanitize_modules_array( $input ) {
         if ( ! is_array( $input ) ) {
@@ -216,5 +206,5 @@ class Vettryx_Core {
     }
 }
 
-// Inicia a máquina
+// Inicializa o plugin
 new Vettryx_Core();
