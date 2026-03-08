@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Sistema central de ferramentas e módulos da VETTRYX Tech.
- * Version:     1.0.2
+ * Version:     1.0.3
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
@@ -44,7 +44,7 @@ class Vettryx_Core {
      */
     public function init_update_checker() {
 
-        $puc_file = plugin_dir_path(__FILE__) . 'plugin-update-checker/plugin-update-checker.php';
+        $puc_file = plugin_dir_path(__FILE__) . 'vendor/plugin-update-checker/plugin-update-checker.php';
 
         if (!file_exists($puc_file)) {
             return;
