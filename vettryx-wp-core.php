@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     1.0.4
+ * Version:     1.0.5
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
@@ -15,27 +15,31 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// Inclui o autoload do Composer para carregar o Plugin Update Checker
 class Vettryx_Core {
 
-    // Nome da chave que vai salvar os dados no banco (wp_options)
+    // Nome da opção no banco de dados onde os módulos ativos serão salvos
     private $option_name = 'vettryx_active_modules';
     private $modules_dir;
 
+    // Instância do Plugin Update Checker para atualizações automáticas via GitHub
+    private $update_checker;
+
     public function __construct() {
-        // Define o caminho absoluto da pasta modules
+        // Define o caminho para a pasta de módulos, que deve estar dentro do plugin
         $this->modules_dir = plugin_dir_path( __FILE__ ) . 'modules/';
 
-        // 1. Carrega os módulos ativos assim que os plugins são iniciados
+        // 1. Carrega os módulos ativos quando o plugin é carregado
         add_action( 'plugins_loaded', [ $this, 'load_active_modules' ] );
 
-        // 2. Hooks para criar o menu no painel de administração
+        // 2. Adiciona o menu de administração para gerenciar os módulos e registra a configuração para salvar os módulos ativos
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_init', [ $this, 'save_modules_state' ] );
 
-        // 3. Declaração de conformidade com a API de Consentimento
+        // 3. Registra a conformidade com a WP Consent API para garantir que o plugin esteja em conformidade com as leis de privacidade (LGPD/GDPR)
         add_action( 'plugins_loaded', [ $this, 'register_consent_api' ] );
 
-        // 4. Inicializa o sistema de atualização automática (GitHub)
+        // 4. Inicializa o Plugin Update Checker para permitir atualizações automáticas do plugin via GitHub, facilitando a manutenção e distribuição de novas versões.
         add_action( 'plugins_loaded', [ $this, 'init_update_checker' ] );
     }
 
@@ -44,12 +48,15 @@ class Vettryx_Core {
      */
     public function init_update_checker() {
 
+        // Verifica se o arquivo do PUC existe antes de tentar incluí-lo, para evitar erros caso o autoload do Composer não esteja configurado corretamente.
         $puc_file = plugin_dir_path(__FILE__) . 'vendor/plugin-update-checker/plugin-update-checker.php';
 
+        // Se o arquivo do PUC não existir, simplesmente retorna sem inicializar o sistema de atualização, permitindo que o plugin funcione normalmente sem atualizações automáticas.
         if (!file_exists($puc_file)) {
             return;
         }
 
+        // Inclui o arquivo do PUC para ter acesso às suas funcionalidades e classes necessárias para configurar o sistema de atualização automática.
         require_once $puc_file;
 
         // Configura o PUC para apontar para o repositório correto no GitHub
@@ -89,6 +96,7 @@ class Vettryx_Core {
     public function load_active_modules() {
         $active_modules = get_option( $this->option_name, [] );
 
+        // Para cada módulo ativo, inclui o arquivo correspondente para carregar suas funcionalidades. O caminho do módulo é relativo à pasta do plugin, e o arquivo deve existir para ser incluído corretamente.
         foreach ( $active_modules as $module_path ) {
             $full_path = plugin_dir_path( __FILE__ ) . $module_path;
             if ( file_exists( $full_path ) ) {
@@ -102,6 +110,7 @@ class Vettryx_Core {
      */
     public function add_admin_menu() {
 
+        // Carrega o ícone do menu a partir do arquivo menu-icon.php, que retorna a string base64 do SVG. Isso permite que o menu tenha um ícone personalizado sem depender de arquivos externos.
         $vettryx_icon = require plugin_dir_path( __FILE__ ) . 'includes/menu-icon.php';
 
         add_menu_page(
@@ -120,7 +129,7 @@ class Vettryx_Core {
      */
     private function get_available_modules() {
         $modules = [];
-        // Pega todas as pastas dentro de modules/
+        // Busca todas as pastas dentro da pasta de módulos, cada pasta representa um módulo diferente. O GLOB_ONLYDIR garante que apenas diretórios sejam retornados, ignorando arquivos soltos.
         $dirs = glob( $this->modules_dir . '*', GLOB_ONLYDIR );
         
         if ( ! $dirs ) return $modules;
@@ -136,7 +145,7 @@ class Vettryx_Core {
                         'name' => trim( $match[1] ),
                         'path' => str_replace( plugin_dir_path( __FILE__ ), '', $file )
                     ];
-                    break; // Achou o arquivo principal, vai pro próximo diretório
+                    break; // Se encontrou o nome do plugin, não precisa ler os outros arquivos dessa pasta, já que cada pasta representa um módulo.
                 }
             }
         }
