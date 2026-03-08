@@ -1,4 +1,4 @@
-name: Build and Release Core
+name: Build and Release VETTRYX WP Core
 
 on:
   repository_dispatch:
@@ -12,13 +12,13 @@ jobs:
       contents: write 
 
     steps:
-      - name: Baixa o código do Core e os Módulos
+      - name: Checkout do código
         uses: actions/checkout@v4
         with:
           submodules: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Puxa as últimas atualizações dos módulos
+      - name: Atualiza os submódulos (Módulos do Core)
         run: |
           git submodule update --remote --checkout --force
           git config user.name "github-actions[bot]"
@@ -26,29 +26,29 @@ jobs:
           git commit -am "chore: atualizando módulos via automação [skip ci]" || echo "Nenhuma mudança nos módulos"
           git push || echo "Nada para fazer push"
 
-      - name: Extrai a Versão do Plugin do PHP
+      - name: Extrai a versão do plugin
         id: extract_version
         run: |
-          # Lê o arquivo PHP, acha a linha da versão, recorta só o número e salva na memória do robô
+          # Extrai a versão do plugin a partir do arquivo principal do plugin
           VERSION=$(grep -i "Version:" vettryx-wp-core.php | head -n 1 | awk -F':' '{print $2}' | xargs)
           echo "PLUGIN_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Empacota o Plugin VETTRYX WP Core
+      - name: Prepara o Plugin para Release
         run: |
           # 1. Cria a pasta exigida pelo WordPress
           mkdir vettryx-wp-core
           
-          # 2. Joga tudo o que importa lá para dentro
+          # 2. Copia os arquivos necessários para dentro da pasta (mantendo a estrutura)
           cp vettryx-wp-core.php vettryx-wp-core/
-          cp -r assets/ vettryx-wp-core/
-          cp -r includes/ vettryx-wp-core/
-          cp -r modules/ vettryx-wp-core/
-          cp -r plugin-update-checker/ vettryx-wp-core/
+          [ -d "assets" ] && cp -r assets/ vettryx-wp-core/
+          [ -d "includes" ] && cp -r includes/ vettryx-wp-core/
+          [ -d "modules" ] && cp -r modules/ vettryx-wp-core/
+          [ -d "vendor" ] && cp -r vendor/ vettryx-wp-core/
           
-          # 3. Zipa a pasta pronta (e não os arquivos soltos)
+          # 3. Cria o arquivo ZIP do plugin
           zip -r vettryx-wp-core.zip vettryx-wp-core/
 
-      - name: Publica a Release Oficial
+      - name: Publica a Release no GitHub
         uses: softprops/action-gh-release@v2
         with:
           files: vettryx-wp-core.zip
