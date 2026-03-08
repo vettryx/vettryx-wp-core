@@ -1,6 +1,11 @@
 name: Build and Release VETTRYX WP Core
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'vettryx-wp-core.php' # Dispara a ação quando o arquivo principal do plugin for atualizado
   repository_dispatch:
     types: [update-modules]
   workflow_dispatch:
