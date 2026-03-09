@@ -1,3 +1,6 @@
 [submodule "modules/site-signature"]
 	path = modules/site-signature
 	url = https://github.com/vettryx/vettryx-wp-site-signature.git
+[submodule "modules/vettryx-wp-tracking-manager"]
+	path = modules/tracking-manager
+	url = https://github.com/vettryx/vettryx-wp-tracking-manager.git
