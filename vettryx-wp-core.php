@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     1.2.3
+ * Version:     2.0.0
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Inclui o autoload do Composer para carregar o Plugin Update Checker
-class Vettryx_Core {
+class Vettryx_WP_Core {
 
     // Nome da opção no banco de dados onde os módulos ativos serão salvos
     private $option_name = 'vettryx_active_modules';
@@ -41,6 +41,33 @@ class Vettryx_Core {
 
         // 4. Inicializa o Plugin Update Checker para permitir atualizações automáticas do plugin via GitHub, facilitando a manutenção e distribuição de novas versões.
         add_action( 'plugins_loaded', [ $this, 'init_update_checker' ] );
+
+        // 5. Carrega o Design System Global da VETTRYX (Submódulo)
+        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+    }
+
+    /**
+     * Carrega o CSS do UI Core e do Dashboard apenas na página do plugin
+     */
+    public function enqueue_admin_assets( $hook ) {
+        if ( strpos( $hook, 'vettryx-core-modules' ) !== false ) {
+            
+            // Variáveis Globais (Single Source of Truth) vindas da pasta assets
+            wp_enqueue_style( 
+                'vtx-ui-variables', 
+                plugin_dir_url( __FILE__ ) . 'assets/vettryx-ui-core/css/base/variables.css', 
+                [], 
+                '1.0.0' 
+            );
+
+            // CSS Estrutural do Dashboard
+            wp_enqueue_style( 
+                'vtx-admin-dashboard', 
+                plugin_dir_url( __FILE__ ) . 'assets/css/admin-dashboard.css', 
+                ['vtx-ui-variables'], 
+                '1.4.0' 
+            );
+        }
     }
 
     /**
@@ -122,6 +149,16 @@ class Vettryx_Core {
             'data:image/svg+xml;base64,' . $vettryx_icon,         // Ícone
             80                                                    // Posição no menu
         );
+
+        // Renomeia o submenu principal para "Painel"
+        add_submenu_page(
+            'vettryx-core-modules',
+            'Painel Geral',
+            'Painel',
+            'manage_options',
+            'vettryx-core-modules',
+            [ $this, 'render_admin_page' ]
+        );
     }
 
     /**
@@ -159,9 +196,13 @@ class Vettryx_Core {
         $available_modules = $this->get_available_modules();
         $active_modules    = get_option( $this->option_name, [] );
         ?>
-        <div class="wrap">
-            <h1><?php _e( 'VETTRYX Tech - Gerenciamento de Ferramentas', 'vettryx-wp-core' ); ?></h1>
-            <p><?php _e( 'Ative ou desative os módulos contratados para este site.', 'vettryx-wp-core' ); ?></p>
+        <div class="vtx-wrap">
+            <div class="vtx-header">
+                <div>
+                    <h1><?php _e( 'Painel de Controle', 'vettryx-wp-core' ); ?></h1>
+                    <p><?php _e( 'Ative ou desative os módulos contratados para o ecossistema deste cliente.', 'vettryx-wp-core' ); ?></p>
+                </div>
+            </div>
             
             <form method="post" action="options.php">
                 <?php 
@@ -169,26 +210,23 @@ class Vettryx_Core {
                 settings_fields( 'vettryx_modules_group' ); 
                 ?>
                 
-                <table class="form-table">
-                    <tbody>
-                        <tr>
-                            <th scope="row"><?php _e( 'Módulos Disponíveis', 'vettryx-wp-core' ); ?></th>
-                            <td>
-                                <fieldset>
-                                    <?php foreach ( $available_modules as $module ) : ?>
-                                        <?php $checked = in_array( $module['path'], $active_modules ) ? 'checked="checked"' : ''; ?>
-                                        <label style="display: block; margin-bottom: 10px;">
-                                            <input type="checkbox" name="<?php echo esc_attr( $this->option_name ); ?>[]" value="<?php echo esc_attr( $module['path'] ); ?>" <?php echo $checked; ?>>
-                                            <strong><?php echo esc_html( $module['name'] ); ?></strong> 
-                                            <br><span style="color: #666; font-size: 12px;"><?php _e( 'Caminho:', 'vettryx-wp-core' ); ?> <?php echo esc_html( $module['path'] ); ?></span>
-                                        </label>
-                                    <?php endforeach; ?>
-                                </fieldset>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <?php submit_button( __( 'Salvar Módulos', 'vettryx-wp-core' ) ); ?>
+                <div class="vtx-grid">
+                    <?php foreach ( $available_modules as $module ) : ?>
+                        <?php $is_active = in_array( $module['path'], $active_modules ); ?>
+                        <div class="vtx-card">
+                            <div class="vtx-card-header">
+                                <h2 class="vtx-card-title"><?php echo esc_html( $module['name'] ); ?></h2>
+                                <label class="vtx-switch">
+                                    <input type="checkbox" name="<?php echo esc_attr( $this->option_name ); ?>[]" value="<?php echo esc_attr( $module['path'] ); ?>" <?php checked( $is_active, true ); ?>>
+                                    <span class="vtx-slider"></span>
+                                </label>
+                            </div>
+                            <div class="vtx-path"><?php echo esc_html( $module['path'] ); ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <button type="submit" class="vtx-submit"><?php _e( 'Salvar Módulos', 'vettryx-wp-core' ); ?></button>
             </form>
         </div>
         <?php
@@ -216,4 +254,4 @@ class Vettryx_Core {
 }
 
 // Inicializa o plugin
-new Vettryx_Core();
+new Vettryx_WP_Core();
