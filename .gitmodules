@@ -4,3 +4,6 @@
 [submodule "modules/vettryx-wp-tracking-manager"]
 	path = modules/tracking-manager
 	url = https://github.com/vettryx/vettryx-wp-tracking-manager.git
+[submodule "modules/cookie-manager"]
+	path = modules/cookie-manager
+	url = https://github.com/vettryx/vettryx-wp-cookie-manager.git
