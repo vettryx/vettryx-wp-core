@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     2.0.0
+ * Version:     2.0.1
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
@@ -193,40 +193,79 @@ class Vettryx_WP_Core {
      * Renderiza a página de administração onde o usuário pode ativar ou desativar os módulos disponíveis
      */
     public function render_admin_page() {
+        $active_modules = get_option( $this->option_name, [] ); 
+        
+        // Mapeamento de descrições e ícones para cada módulo
+        $module_info = [
+            'modules/cookie-manager/vettryx-wp-cookie-manager.php' => [
+                'name' => 'Cookie Manager',
+                'desc' => 'Gerenciador de consentimento nativo e gerador de políticas integrado à WP Consent API (LGPD).',
+                'icon' => 'dashicons-shield'
+            ],
+            'modules/site-signature/vettryx-wp-site-signature.php' => [
+                'name' => 'Site Signature',
+                'desc' => 'Personalização white-label do painel administrativo e assinatura da agência no rodapé.',
+                'icon' => 'dashicons-admin-customizer'
+            ],
+            'modules/tracking-manager/vettryx-wp-tracking-manager.php' => [
+                'name' => 'Tracking Manager',
+                'desc' => 'Injeção otimizada de scripts (GA4, Meta Pixel) com bloqueio nativo pré-consentimento.',
+                'icon' => 'dashicons-chart-area'
+            ]
+        ];
+
         $available_modules = $this->get_available_modules();
-        $active_modules    = get_option( $this->option_name, [] );
         ?>
-        <div class="vtx-wrap">
-            <div class="vtx-header">
+        <div class="vtx-dashboard-wrap">
+            <div class="vtx-dashboard-header">
                 <div>
-                    <h1><?php _e( 'Painel de Controle', 'vettryx-wp-core' ); ?></h1>
-                    <p><?php _e( 'Ative ou desative os módulos contratados para o ecossistema deste cliente.', 'vettryx-wp-core' ); ?></p>
+                    <h1>VETTRYX Tech</h1>
+                    <p>Ative e gerencie os módulos do ecossistema para este cliente.</p>
                 </div>
             </div>
-            
+
             <form method="post" action="options.php">
-                <?php 
-                // Segurança do WordPress para formulários
-                settings_fields( 'vettryx_modules_group' ); 
-                ?>
+                <?php settings_fields( 'vettryx_modules_group' ); ?>
                 
-                <div class="vtx-grid">
+                <div class="vtx-modules-grid">
                     <?php foreach ( $available_modules as $module ) : ?>
-                        <?php $is_active = in_array( $module['path'], $active_modules ); ?>
-                        <div class="vtx-card">
-                            <div class="vtx-card-header">
-                                <h2 class="vtx-card-title"><?php echo esc_html( $module['name'] ); ?></h2>
-                                <label class="vtx-switch">
-                                    <input type="checkbox" name="<?php echo esc_attr( $this->option_name ); ?>[]" value="<?php echo esc_attr( $module['path'] ); ?>" <?php checked( $is_active, true ); ?>>
-                                    <span class="vtx-slider"></span>
+                        <?php 
+                            $path = $module['path'];
+                            $is_active = in_array( $path, $active_modules ); 
+                            
+                            $name = isset($module_info[$path]) ? $module_info[$path]['name'] : $module['name'];
+                            $desc = isset($module_info[$path]) ? $module_info[$path]['desc'] : 'Módulo do ecossistema VETTRYX.';
+                            $icon = isset($module_info[$path]) ? $module_info[$path]['icon'] : 'dashicons-admin-plugins';
+                        ?>
+                        
+                        <div class="vtx-module-card">
+                            <div class="vtx-card-body">
+                                <div class="vtx-card-icon">
+                                    <span class="dashicons <?php echo esc_attr($icon); ?>"></span>
+                                </div>
+                                <h3 class="vtx-card-title"><?php echo esc_html( $name ); ?></h3>
+                                <p class="vtx-card-desc"><?php echo esc_html( $desc ); ?></p>
+                            </div>
+                            
+                            <div class="vtx-card-footer">
+                                <?php if ($is_active) : ?>
+                                    <span style="font-size: 12px; color: #00a32a; font-weight: 600;">ATIVO</span>
+                                <?php else : ?>
+                                    <span style="font-size: 12px; color: #8c8f94; font-weight: 600;">INATIVO</span>
+                                <?php endif; ?>
+                                
+                                <label class="vtx-toggle">
+                                    <input type="checkbox" name="<?php echo esc_attr( $this->option_name ); ?>[]" value="<?php echo esc_attr( $path ); ?>" <?php checked( $is_active, true ); ?>>
+                                    <span class="vtx-toggle-slider"></span>
                                 </label>
                             </div>
-                            <div class="vtx-path"><?php echo esc_html( $module['path'] ); ?></div>
                         </div>
                     <?php endforeach; ?>
                 </div>
 
-                <button type="submit" class="vtx-submit"><?php _e( 'Salvar Módulos', 'vettryx-wp-core' ); ?></button>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button type="submit" class="vtx-save-btn">Salvar Alterações</button>
+                </div>
             </form>
         </div>
         <?php
