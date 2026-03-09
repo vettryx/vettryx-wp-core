@@ -1,6 +1,6 @@
 # ⚙️ VETTRYX WP Core
 
-> **Versão:** 1.1.0 | **Requisito Mínimo:** PHP 8.2+
+> **Versão:** 1.2.0 | **Requisito Mínimo:** PHP 8.2+
 
 O **VETTRYX WP Core** é o plugin central e fundacional para todos os sites desenvolvidos e gerenciados pela VETTRYX Tech. Ele atua como um framework corporativo, responsável por centralizar ferramentas, gerenciar atualizações automáticas (OTA) e garantir a conformidade legal (LGPD/GDPR) de todo o ecossistema de plugins da agência.
 
@@ -17,6 +17,7 @@ Este repositório é composto por submódulos independentes. Atualmente, o Core 
 
 1. **[VETTRYX WP Site Signature](https://github.com/vettryx/vettryx-wp-site-signature):** Gerenciador inteligente de copyright e assinatura de desenvolvimento corporativo.
 2. **[VETTRYX WP Tracking Manager](https://github.com/vettryx/vettryx-wp-tracking-manager):** Injetor nativo e blindado de IDs de rastreamento (GTM, GA4, Meta Pixel) para campanhas de marketing.
+3. **[VETTRYX WP Cookie Manager](https://github.com/vettryx/vettryx-wp-cookie-manager):** Gerenciador de consentimento LGPD nativo e 100% personalizável (Substituto de alta performance para o Complianz).
 
 ## 🛠️ Deploy e CI/CD (Para Desenvolvedores)
 
