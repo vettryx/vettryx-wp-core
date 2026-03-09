@@ -7,3 +7,6 @@
 [submodule "modules/cookie-manager"]
 	path = modules/cookie-manager
 	url = https://github.com/vettryx/vettryx-wp-cookie-manager.git
+[submodule "assets/vettryx-ui-core"]
+	path = assets/vettryx-ui-core
+	url = https://github.com/vettryx/vettryx-ui-core.git
