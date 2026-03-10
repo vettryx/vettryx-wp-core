@@ -10,3 +10,6 @@
 [submodule "assets/vettryx-ui-core"]
 	path = assets/vettryx-ui-core
 	url = https://github.com/vettryx/vettryx-ui-core.git
+[submodule "modules/fast-gallery"]
+	path = modules/fast-gallery
+	url = https://github.com/vettryx/vettryx-wp-fast-gallery.git
