@@ -13,3 +13,6 @@
 [submodule "modules/fast-gallery"]
 	path = modules/fast-gallery
 	url = https://github.com/vettryx/vettryx-wp-fast-gallery.git
+[submodule "modules/whatsapp"]
+	path = modules/whatsapp
+	url = https://github.com/vettryx/vettryx-wp-whatsapp.git
