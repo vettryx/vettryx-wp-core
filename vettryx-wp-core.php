@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     2.1.17
+ * Version:     2.2.0
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
@@ -216,6 +216,11 @@ class Vettryx_WP_Core {
                 'name' => 'Tracking Manager',
                 'desc' => 'Injeção otimizada de scripts (GA4, Meta Pixel) com bloqueio nativo pré-consentimento.',
                 'icon' => 'dashicons-chart-area'
+            ],
+            'modules/vettryx-wp-whatsapp/vettryx-wp-whatsapp.php' => [
+                'name' => 'WhatsApp Widget',
+                'desc' => 'Botão flutuante nativo e ultraleve do WhatsApp, focado em conversão e performance.',
+                'icon' => 'dashicons-format-chat'
             ]
         ];
 
