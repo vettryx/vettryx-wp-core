@@ -3,19 +3,19 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     2.3.0
+ * Version:     2.4.0
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
  * License:     Proprietária (Uso Comercial Exclusivo)
  */
 
-// Evita acesso direto ao arquivo
+// Segurança: Evita acesso direto ao arquivo
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Inclui o autoload do Composer para carregar o Plugin Update Checker
+// Classe principal do plugin
 class Vettryx_WP_Core {
 
     // Nome da opção no banco de dados onde os módulos ativos serão salvos
@@ -25,6 +25,7 @@ class Vettryx_WP_Core {
     // Instância do Plugin Update Checker para atualizações automáticas via GitHub
     private $update_checker;
 
+    // Construtor
     public function __construct() {
         // Define o caminho para a pasta de módulos, que deve estar dentro do plugin
         $this->modules_dir = plugin_dir_path( __FILE__ ) . 'modules/';
@@ -44,6 +45,10 @@ class Vettryx_WP_Core {
 
         // 5. Carrega o Design System Global da VETTRYX
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+
+        // 6. Rotas AJAX para o painel dinâmico
+        add_action( 'wp_ajax_vettryx_toggle_module', [ $this, 'ajax_toggle_module' ] );
+        add_action( 'wp_ajax_vettryx_check_updates', [ $this, 'ajax_check_updates' ] );
     }
 
     /**
@@ -52,6 +57,7 @@ class Vettryx_WP_Core {
     public function enqueue_admin_assets( $hook ) {
         if ( strpos( $hook, 'vettryx-core-modules' ) !== false ) {
             
+            // 1. Carrega o CSS do UI Core e do Dashboard apenas na página do plugin
             wp_enqueue_style( 
                 'vtx-ui-variables', 
                 plugin_dir_url( __FILE__ ) . 'assets/vettryx-ui-core/css/base/variables.css', 
@@ -59,12 +65,28 @@ class Vettryx_WP_Core {
                 '1.0.0' 
             );
 
+            // 2. Carrega o CSS do Dashboard
             wp_enqueue_style( 
                 'vtx-admin-dashboard', 
                 plugin_dir_url( __FILE__ ) . 'assets/css/admin-dashboard.css', 
                 ['vtx-ui-variables'], 
                 '1.4.0' 
             );
+
+            // 3. Script do Dashboard (AJAX)
+            wp_enqueue_script( 
+                'vtx-admin-js', 
+                plugin_dir_url( __FILE__ ) . 'assets/js/admin-dashboard.js', 
+                ['jquery'], 
+                '1.0.0', 
+                true 
+            );
+
+            // 4. Injeta o URL do admin-ajax.php e o Nonce de segurança para o JS
+            wp_localize_script( 'vtx-admin-js', 'vtxCore', [
+                'ajax_url' => admin_url( 'admin-ajax.php' ),
+                'nonce'    => wp_create_nonce( 'vettryx_admin_nonce' )
+            ]);
         }
     }
 
@@ -182,6 +204,44 @@ class Vettryx_WP_Core {
     }
 
     /**
+     * AJAX: Salva o estado do módulo instantaneamente
+     */
+    public function ajax_toggle_module() {
+        check_ajax_referer( 'vettryx_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error();
+
+        $module_path = sanitize_text_field( $_POST['module'] );
+        $is_active = filter_var( $_POST['active'], FILTER_VALIDATE_BOOLEAN );
+
+        $active_modules = get_option( $this->option_name, [] );
+
+        if ( $is_active ) {
+            if ( ! in_array( $module_path, $active_modules ) ) {
+                $active_modules[] = $module_path;
+            }
+        } else {
+            $active_modules = array_diff( $active_modules, [ $module_path ] );
+        }
+
+        update_option( $this->option_name, $active_modules );
+        wp_send_json_success();
+    }
+
+    /**
+     * AJAX: Força a verificação de atualizações no GitHub
+     */
+    public function ajax_check_updates() {
+        check_ajax_referer( 'vettryx_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) wp_send_json_error();
+
+        if ( $this->update_checker ) {
+            $this->update_checker->checkForUpdates();
+            wp_send_json_success();
+        }
+        wp_send_json_error();
+    }
+
+    /**
      * Renderiza a página de administração de módulos (wp_admin_page)
      */
     public function render_admin_page() {
@@ -189,55 +249,50 @@ class Vettryx_WP_Core {
         $available_modules = $this->get_available_modules();
         ?>
         <div class="vtx-dashboard-wrap">
-            <div class="vtx-dashboard-header">
+            <div class="vtx-dashboard-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>VETTRYX Tech</h1>
                     <p>Ative e gerencie os módulos do ecossistema para este cliente.</p>
                 </div>
+                <div>
+                    <button type="button" id="vtx-check-updates-btn" class="button button-secondary">
+                        <span class="dashicons dashicons-update" style="margin-top: 3px;"></span> Verificar Atualizações
+                    </button>
+                </div>
             </div>
-
-            <form method="post" action="options.php">
-                <?php settings_fields( 'vettryx_modules_group' ); ?>
                 
-                <div class="vtx-modules-grid">
-                    <?php foreach ( $available_modules as $module ) : ?>
-                        <?php 
-                            $path = $module['path'];
-                            $is_active = in_array( $path, $active_modules ); 
-                            $name = $module['name'];
-                            $desc = $module['desc'];
-                            $icon = $module['icon'];
-                        ?>
-                        
-                        <div class="vtx-module-card">
-                            <div class="vtx-card-body">
-                                <div class="vtx-card-icon">
-                                    <span class="dashicons <?php echo esc_attr($icon); ?>"></span>
-                                </div>
-                                <h3 class="vtx-card-title"><?php echo esc_html( $name ); ?></h3>
-                                <p class="vtx-card-desc"><?php echo esc_html( $desc ); ?></p>
+            <div class="vtx-modules-grid">
+                <?php foreach ( $available_modules as $module ) : ?>
+                    <?php 
+                        $path = $module['path'];
+                        $is_active = in_array( $path, $active_modules ); 
+                        $name = $module['name'];
+                        $desc = $module['desc'];
+                        $icon = $module['icon'];
+                    ?>
+                    
+                    <div class="vtx-module-card">
+                        <div class="vtx-card-body">
+                            <div class="vtx-card-icon">
+                                <span class="dashicons <?php echo esc_attr($icon); ?>"></span>
                             </div>
-                            
-                            <div class="vtx-card-footer">
-                                <?php if ($is_active) : ?>
-                                    <span style="font-size: 12px; color: #00a32a; font-weight: 600;">ATIVO</span>
-                                <?php else : ?>
-                                    <span style="font-size: 12px; color: #8c8f94; font-weight: 600;">INATIVO</span>
-                                <?php endif; ?>
-                                
-                                <label class="vtx-toggle">
-                                    <input type="checkbox" name="<?php echo esc_attr( $this->option_name ); ?>[]" value="<?php echo esc_attr( $path ); ?>" <?php checked( $is_active, true ); ?>>
-                                    <span class="vtx-toggle-slider"></span>
-                                </label>
-                            </div>
+                            <h3 class="vtx-card-title"><?php echo esc_html( $name ); ?></h3>
+                            <p class="vtx-card-desc"><?php echo esc_html( $desc ); ?></p>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <div style="margin-top: 20px; text-align: right;">
-                    <button type="submit" class="vtx-save-btn">Salvar Alterações</button>
-                </div>
-            </form>
+                        
+                        <div class="vtx-card-footer">
+                            <span class="vtx-status-label" style="font-size: 12px; font-weight: 600; color: <?php echo $is_active ? '#00a32a' : '#8c8f94'; ?>;">
+                                <?php echo $is_active ? 'ATIVO' : 'INATIVO'; ?>
+                            </span>
+                            
+                            <label class="vtx-toggle">
+                                <input type="checkbox" class="vtx-module-checkbox" data-module="<?php echo esc_attr( $path ); ?>" <?php checked( $is_active, true ); ?>>
+                                <span class="vtx-toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         </div>
         <?php
     }
