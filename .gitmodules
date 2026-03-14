@@ -16,3 +16,6 @@
 [submodule "modules/whatsapp"]
 	path = modules/whatsapp
 	url = https://github.com/vettryx/vettryx-wp-whatsapp.git
+[submodule "modules/essential-seo"]
+	path = modules/essential-seo
+	url = https://github.com/vettryx/vettryx-wp-essential-seo.git
