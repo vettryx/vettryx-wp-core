@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     2.4.0
+ * Version:     2.5.0
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
@@ -91,7 +91,7 @@ class Vettryx_WP_Core {
     }
 
     /**
-     * Inicializa o Plugin Update Checker (GitHub)
+     * Inicializa o Plugin Update Checker via API Proprietária da VETTRYX
      */
     public function init_update_checker() {
         $puc_file = plugin_dir_path(__FILE__) . 'vendor/plugin-update-checker/plugin-update-checker.php';
@@ -102,15 +102,14 @@ class Vettryx_WP_Core {
 
         require_once $puc_file;
 
+        // Aponta para o servidor proxy da VETTRYX em vez do GitHub direto
         $this->update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-            'https://github.com/vettryx/vettryx-wp-core',
+            'https://api.vettryx.com.br/?action=get_metadata&slug=vettryx-wp-core',
             __FILE__,
             'vettryx-wp-core'
         );
 
-        $this->update_checker->setBranch('main');
-        $this->update_checker->getVcsApi()->enableReleaseAssets();
-
+        // Mantém os ícones personalizados na tela de atualização do WordPress
         $this->update_checker->addResultFilter(function ($info) {
             $info->icons = [
                 '1x' => plugin_dir_url(__FILE__) . 'assets/icon-128x128.png',
