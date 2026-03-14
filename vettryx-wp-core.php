@@ -3,11 +3,11 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     2.2.10
+ * Version:     2.3.0
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
- * License:     GPLv3
+ * License:     Proprietária (Uso Comercial Exclusivo)
  */
 
 // Evita acesso direto ao arquivo
@@ -36,13 +36,13 @@ class Vettryx_WP_Core {
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_init', [ $this, 'save_modules_state' ] );
 
-        // 3. Registra a conformidade com a WP Consent API para garantir que o plugin esteja em conformidade com as leis de privacidade (LGPD/GDPR)
+        // 3. Registra a conformidade com a WP Consent API (LGPD/GDPR)
         add_action( 'plugins_loaded', [ $this, 'register_consent_api' ] );
 
-        // 4. Inicializa o Plugin Update Checker para permitir atualizações automáticas do plugin via GitHub, facilitando a manutenção e distribuição de novas versões.
+        // 4. Inicializa o Plugin Update Checker via GitHub
         add_action( 'plugins_loaded', [ $this, 'init_update_checker' ] );
 
-        // 5. Carrega o Design System Global da VETTRYX (Submódulo)
+        // 5. Carrega o Design System Global da VETTRYX
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
     }
 
@@ -52,7 +52,6 @@ class Vettryx_WP_Core {
     public function enqueue_admin_assets( $hook ) {
         if ( strpos( $hook, 'vettryx-core-modules' ) !== false ) {
             
-            // Variáveis Globais (Single Source of Truth) vindas da pasta assets
             wp_enqueue_style( 
                 'vtx-ui-variables', 
                 plugin_dir_url( __FILE__ ) . 'assets/vettryx-ui-core/css/base/variables.css', 
@@ -60,7 +59,6 @@ class Vettryx_WP_Core {
                 '1.0.0' 
             );
 
-            // CSS Estrutural do Dashboard
             wp_enqueue_style( 
                 'vtx-admin-dashboard', 
                 plugin_dir_url( __FILE__ ) . 'assets/css/admin-dashboard.css', 
@@ -74,32 +72,23 @@ class Vettryx_WP_Core {
      * Inicializa o Plugin Update Checker (GitHub)
      */
     public function init_update_checker() {
-
-        // Verifica se o arquivo do PUC existe antes de tentar incluí-lo, para evitar erros caso o autoload do Composer não esteja configurado corretamente.
         $puc_file = plugin_dir_path(__FILE__) . 'vendor/plugin-update-checker/plugin-update-checker.php';
 
-        // Se o arquivo do PUC não existir, simplesmente retorna sem inicializar o sistema de atualização, permitindo que o plugin funcione normalmente sem atualizações automáticas.
         if (!file_exists($puc_file)) {
             return;
         }
 
-        // Inclui o arquivo do PUC para ter acesso às suas funcionalidades e classes necessárias para configurar o sistema de atualização automática.
         require_once $puc_file;
 
-        // Configura o PUC para apontar para o repositório correto no GitHub
         $this->update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
             'https://github.com/vettryx/vettryx-wp-core',
             __FILE__,
             'vettryx-wp-core'
         );
 
-        // Define a branch que o PUC deve monitorar para atualizações (pode ser 'main', 'master' ou qualquer outra)
         $this->update_checker->setBranch('main');
-
-        // Habilita o suporte para arquivos de lançamento (release assets) no GitHub, permitindo que o PUC baixe o .zip do release automaticamente.
         $this->update_checker->getVcsApi()->enableReleaseAssets();
 
-        // Adiciona um filtro para personalizar as informações do plugin exibidas na tela de atualizações, incluindo os ícones personalizados.
         $this->update_checker->addResultFilter(function ($info) {
             $info->icons = [
                 '1x' => plugin_dir_url(__FILE__) . 'assets/icon-128x128.png',
@@ -123,7 +112,6 @@ class Vettryx_WP_Core {
     public function load_active_modules() {
         $active_modules = get_option( $this->option_name, [] );
 
-        // Para cada módulo ativo, inclui o arquivo correspondente para carregar suas funcionalidades. O caminho do módulo é relativo à pasta do plugin, e o arquivo deve existir para ser incluído corretamente.
         foreach ( $active_modules as $module_path ) {
             $full_path = plugin_dir_path( __FILE__ ) . $module_path;
             if ( file_exists( $full_path ) ) {
@@ -133,24 +121,21 @@ class Vettryx_WP_Core {
     }
 
     /**
-     * Adiciona um item de menu no painel de administração para gerenciar os módulos ativos
+     * Adiciona o menu no painel de administração (wp_menu)
      */
     public function add_admin_menu() {
-
-        // Carrega o ícone do menu a partir do arquivo menu-icon.php, que retorna a string base64 do SVG. Isso permite que o menu tenha um ícone personalizado sem depender de arquivos externos.
         $vettryx_icon = require plugin_dir_path( __FILE__ ) . 'includes/menu-icon.php';
 
         add_menu_page(
-            'VETTRYX Tech - Módulos',                             // Título da página
-            'VETTRYX Tech',                                       // Nome no menu lateral
-            'manage_options',                                     // Capacidade (só admin vê)
-            'vettryx-core-modules',                               // Slug da URL
-            [ $this, 'render_admin_page' ],                       // Função que desenha a tela
-            'data:image/svg+xml;base64,' . $vettryx_icon,         // Ícone
-            3                                                     // Posição no menu
+            'VETTRYX Tech - Módulos',
+            'VETTRYX Tech',
+            'manage_options',
+            'vettryx-core-modules',
+            [ $this, 'render_admin_page' ],
+            'data:image/svg+xml;base64,' . $vettryx_icon,
+            3
         );
 
-        // Renomeia o submenu principal para "Painel"
         add_submenu_page(
             'vettryx-core-modules',
             'Painel Geral',
@@ -162,27 +147,34 @@ class Vettryx_WP_Core {
     }
 
     /**
-     * Busca os módulos disponíveis na pasta "modules" e retorna um array com nome e caminho de cada um
+     * Busca os módulos disponíveis lendo os cabeçalhos dinamicamente (wp_file_data)
      */
     private function get_available_modules() {
         $modules = [];
-        // Busca todas as pastas dentro da pasta de módulos, cada pasta representa um módulo diferente. O GLOB_ONLYDIR garante que apenas diretórios sejam retornados, ignorando arquivos soltos.
         $dirs = glob( $this->modules_dir . '*', GLOB_ONLYDIR );
         
         if ( ! $dirs ) return $modules;
 
         foreach ( $dirs as $dir ) {
-            // Pega todos os arquivos .php na raiz dessa pasta
             $files = glob( $dir . '/*.php' );
             foreach ( $files as $file ) {
-                // Lê as primeiras linhas para achar o nome do plugin
-                $content = file_get_contents( $file, false, null, 0, 8192 );
-                if ( preg_match( '/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $content, $match ) ) {
+                
+                // O WP lê o arquivo e extrai os cabeçalhos que pedimos
+                $plugin_data = get_file_data( $file, [
+                    'Name'        => 'Plugin Name',
+                    'Description' => 'Description',
+                    'Icon'        => 'Vettryx Icon'
+                ] );
+
+                // Se encontrou o 'Name', sabemos que é o arquivo principal do módulo
+                if ( ! empty( $plugin_data['Name'] ) ) {
                     $modules[] = [
-                        'name' => trim( $match[1] ),
+                        'name' => $plugin_data['Name'],
+                        'desc' => $plugin_data['Description'],
+                        'icon' => ! empty( $plugin_data['Icon'] ) ? $plugin_data['Icon'] : 'dashicons-admin-plugins',
                         'path' => str_replace( plugin_dir_path( __FILE__ ), '', $file )
                     ];
-                    break; // Se encontrou o nome do plugin, não precisa ler os outros arquivos dessa pasta, já que cada pasta representa um módulo.
+                    break;
                 }
             }
         }
@@ -190,40 +182,10 @@ class Vettryx_WP_Core {
     }
 
     /**
-     * Renderiza a página de administração onde o usuário pode ativar ou desativar os módulos disponíveis
+     * Renderiza a página de administração de módulos (wp_admin_page)
      */
     public function render_admin_page() {
         $active_modules = get_option( $this->option_name, [] ); 
-        
-        // Mapeamento de descrições e ícones para cada módulo
-        $module_info = [
-            'modules/cookie-manager/vettryx-wp-cookie-manager.php' => [
-                'name' => 'Cookie Manager',
-                'desc' => 'Gerenciador de consentimento nativo e gerador de políticas integrado à WP Consent API (LGPD).',
-                'icon' => 'dashicons-shield'
-            ],
-            'modules/fast-gallery/vettryx-wp-fast-gallery.php' => [
-                'name' => 'Fast Gallery',
-                'desc' => 'Gerenciador simplificado de álbuns de serviços com fotos de Antes e Depois flexíveis.',
-                'icon' => 'dashicons-format-gallery'
-            ],
-            'modules/site-signature/vettryx-wp-site-signature.php' => [
-                'name' => 'Site Signature',
-                'desc' => 'Personalização white-label do painel administrativo e assinatura da agência no rodapé.',
-                'icon' => 'dashicons-admin-customizer'
-            ],
-            'modules/tracking-manager/vettryx-wp-tracking-manager.php' => [
-                'name' => 'Tracking Manager',
-                'desc' => 'Injeção otimizada de scripts (GA4, Meta Pixel) com bloqueio nativo pré-consentimento.',
-                'icon' => 'dashicons-chart-area'
-            ],
-            'modules/vettryx-wp-whatsapp/vettryx-wp-whatsapp.php' => [
-                'name' => 'WhatsApp Widget',
-                'desc' => 'Botão flutuante nativo e ultraleve do WhatsApp, focado em conversão e performance.',
-                'icon' => 'dashicons-format-chat'
-            ]
-        ];
-
         $available_modules = $this->get_available_modules();
         ?>
         <div class="vtx-dashboard-wrap">
@@ -242,10 +204,9 @@ class Vettryx_WP_Core {
                         <?php 
                             $path = $module['path'];
                             $is_active = in_array( $path, $active_modules ); 
-                            
-                            $name = isset($module_info[$path]) ? $module_info[$path]['name'] : $module['name'];
-                            $desc = isset($module_info[$path]) ? $module_info[$path]['desc'] : 'Módulo do ecossistema VETTRYX.';
-                            $icon = isset($module_info[$path]) ? $module_info[$path]['icon'] : 'dashicons-admin-plugins';
+                            $name = $module['name'];
+                            $desc = $module['desc'];
+                            $icon = $module['icon'];
                         ?>
                         
                         <div class="vtx-module-card">
@@ -282,7 +243,7 @@ class Vettryx_WP_Core {
     }
 
     /**
-     * Registra a configuração para salvar os módulos ativos no banco de dados (wp_options)
+     * Registra a configuração no banco de dados (wp_options)
      */
     public function save_modules_state() {
         register_setting( 'vettryx_modules_group', $this->option_name, [
@@ -292,7 +253,7 @@ class Vettryx_WP_Core {
     }
 
     /**
-     * Função de sanitização para o array de módulos ativos, garantindo que apenas strings sejam salvas e evitando possíveis problemas de segurança
+     * Função de sanitização (sanitize_text_field)
      */
     public function sanitize_modules_array( $input ) {
         if ( ! is_array( $input ) ) {
