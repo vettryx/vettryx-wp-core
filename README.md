@@ -19,6 +19,9 @@ Este repositório é composto por submódulos independentes. Atualmente, o Core 
 3. **[VETTRYX WP Site Signature](https://github.com/vettryx/vettryx-wp-site-signature):** Personalização white-label do painel administrativo e assinatura corporativa.
 4. **[VETTRYX WP Tracking Manager](https://github.com/vettryx/vettryx-wp-tracking-manager):** Injeção otimizada de scripts (GA4, Meta Pixel) com bloqueio nativo pré-consentimento.
 5. **[VETTRYX WP WhatsApp Widget](https://github.com/vettryx/vettryx-wp-whatsapp):** Botão flutuante nativo e ultraleve, focado em conversão e performance.
+6. **[VETTRYX WP Audit Log](https://github.com/vettryx/vettryx-wp-audit-log):** Monitoramento silencioso de segurança e registro de atividades (Auditoria).
+7. **[VETTRYX WP Reports](https://github.com/vettryx/vettryx-wp-reports):** Geração nativa de relatórios mensais de manutenção e SLA em PDF.
+8. **[VETTRYX WP Compliance](https://github.com/vettryx/vettryx-wp-compliance):** Central de LGPD e notificação oficial de incidentes de segurança (SLA 24h).
 
 ## 🛠️ Deploy e CI/CD (Para Desenvolvedores)
 
@@ -36,13 +39,13 @@ A geração do arquivo de instalação para os clientes é **100% automatizada**
 
 Como utilizamos submódulos, para baixar o Core e todos os módulos de uma vez, utilize:
 
-    git clone --recurse-submodules [https://github.com/vettryx/vettryx-wp-core.git](https://github.com/vettryx/vettryx-wp-core.git)
+    git clone --recurse-submodules https://github.com/vettryx/vettryx-wp-core.git
 
 ### Como adicionar um novo módulo ao Core
 
 Para acoplar uma nova ferramenta da agência ao ecossistema, utilize o terminal na raiz deste repositório:
 
-    git submodule add [https://github.com/vettryx/nome-do-novo-repositorio.git](https://github.com/vettryx/nome-do-novo-repositorio.git) modules/nome-da-pasta
+    git submodule add https://github.com/vettryx/nome-do-novo-repositorio.git modules/nome-da-pasta
     git add .
     git commit -m "feat: adiciona modulo nome-da-pasta"
     git push
