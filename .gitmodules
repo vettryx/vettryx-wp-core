@@ -22,6 +22,3 @@
 [submodule "modules/reports"]
 	path = modules/reports
 	url = https://github.com/vettryx/vettryx-wp-reports.git
-[submodule "modules/audit-log"]
-	path = modules/audit-log
-	url = https://github.com/vettryx/vettryx-wp-audit-log.git
