@@ -28,3 +28,6 @@
 [submodule "modules/compliance"]
 	path = modules/compliance
 	url = https://github.com/vettryx/vettryx-wp-compliance.git
+[submodule "modules/hardening"]
+	path = modules/hardening
+	url = https://github.com/vettryx/vettryx-wp-hardening.git
