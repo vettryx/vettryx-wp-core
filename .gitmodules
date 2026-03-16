@@ -19,3 +19,6 @@
 [submodule "modules/essential-seo"]
 	path = modules/essential-seo
 	url = https://github.com/vettryx/vettryx-wp-essential-seo.git
+[submodule "modules/reports"]
+	path = modules/reports
+	url = https://github.com/vettryx/vettryx-wp-reports.git
