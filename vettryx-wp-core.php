@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     2.8.5
+ * Version:     2.8.6
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
