@@ -31,3 +31,6 @@
 [submodule "modules/hardening"]
 	path = modules/hardening
 	url = https://github.com/vettryx/vettryx-wp-hardening.git
+[submodule "modules/architect"]
+	path = modules/architect
+	url = https://github.com/vettryx/vettryx-wp-architect.git
