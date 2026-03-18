@@ -15,13 +15,13 @@ O **VETTRYX WP Core** é o plugin central e fundacional para todos os sites dese
 Este repositório é composto por submódulos independentes. Atualmente, o Core gerencia:
 
 1. **[VETTRYX WP Cookie Manager](https://github.com/vettryx/vettryx-wp-cookie-manager):** Gerenciador de consentimento LGPD nativo e 100% personalizável.
-2. **[VETTRYX WP Fast Gallery](https://github.com/vettryx/vettryx-wp-fast-gallery):** Gerenciador simplificado de álbuns de serviços com fotos de Antes e Depois.
-3. **[VETTRYX WP Site Signature](https://github.com/vettryx/vettryx-wp-site-signature):** Personalização white-label do painel administrativo e assinatura corporativa.
-4. **[VETTRYX WP Tracking Manager](https://github.com/vettryx/vettryx-wp-tracking-manager):** Injeção otimizada de scripts (GA4, Meta Pixel) com bloqueio nativo pré-consentimento.
-5. **[VETTRYX WP WhatsApp Widget](https://github.com/vettryx/vettryx-wp-whatsapp):** Botão flutuante nativo e ultraleve, focado em conversão e performance.
-6. **[VETTRYX WP Audit Log](https://github.com/vettryx/vettryx-wp-audit-log):** Monitoramento silencioso de segurança e registro de atividades (Auditoria).
-7. **[VETTRYX WP Reports](https://github.com/vettryx/vettryx-wp-reports):** Geração nativa de relatórios mensais de manutenção e SLA em PDF.
-8. **[VETTRYX WP Compliance](https://github.com/vettryx/vettryx-wp-compliance):** Central de LGPD e notificação oficial de incidentes de segurança (SLA 24h).
+2. **[VETTRYX WP Site Signature](https://github.com/vettryx/vettryx-wp-site-signature):** Personalização white-label do painel administrativo e assinatura corporativa.
+3. **[VETTRYX WP Tracking Manager](https://github.com/vettryx/vettryx-wp-tracking-manager):** Injeção otimizada de scripts (GA4, Meta Pixel) com bloqueio nativo pré-consentimento.
+4. **[VETTRYX WP WhatsApp Widget](https://github.com/vettryx/vettryx-wp-whatsapp):** Botão flutuante nativo e ultraleve, focado em conversão e performance.
+5. **[VETTRYX WP Audit Log](https://github.com/vettryx/vettryx-wp-audit-log):** Monitoramento silencioso de segurança e registro de atividades (Auditoria).
+6. **[VETTRYX WP Reports](https://github.com/vettryx/vettryx-wp-reports):** Geração nativa de relatórios mensais de manutenção e SLA em PDF.
+7. **[VETTRYX WP Compliance](https://github.com/vettryx/vettryx-wp-compliance):** Central de LGPD e notificação oficial de incidentes de segurança (SLA 24h).
+8. **[VETTRYX WP Architect](https://github.com/vettryx/vettryx-wp-architect):** Módulo estrutural focado na arquitetura visual e gerenciamento avançado de layouts.
 
 ## 🛠️ Deploy e CI/CD (Para Desenvolvedores)
 
