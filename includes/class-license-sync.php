@@ -295,6 +295,3 @@ class Vettryx_License_Sync {
         return isset( $matches[1] ) ? 'vettryx-wp-' . $matches[1] : '';
     }
 }
-
-// Instancia a classe
-new Vettryx_License_Sync();
