@@ -3,7 +3,7 @@
  * Plugin Name: VETTRYX WP Core
  * Plugin URI:  https://github.com/vettryx/vettryx-wp-core
  * Description: Plugin principal da VETTRYX Tech para gerenciar os módulos contratados e garantir a conformidade com a LGPD/GDPR, além de facilitar a manutenção e atualização dos plugins internos.
- * Version:     3.0.0
+ * Version:     3.1.0
  * Author:      VETTRYX Tech
  * Author URI:  https://vettryx.com.br
  * Text Domain: vettryx-wp-core
@@ -227,6 +227,21 @@ class Vettryx_WP_Core {
         $active_modules = get_option( $this->option_name, [] );
 
         if ( $is_active ) {
+            // Verifica se há uma licença configurada
+            $license_key = $this->license_sync->get_license_key();
+            
+            if ( ! empty( $license_key ) ) {
+                // Extrai o slug do módulo
+                $module_slug = $this->extract_module_slug_from_path( $module_path );
+                
+                // Verifica se o módulo está habilitado pela licença
+                if ( ! $this->license_sync->is_module_enabled( $module_slug ) ) {
+                    wp_send_json_error( [
+                        'message' => 'Este módulo não está habilitado em sua licença. Consulte seu painel de licença para mais informações.'
+                    ] );
+                }
+            }
+            
             if ( ! in_array( $module_path, $active_modules ) ) {
                 $active_modules[] = $module_path;
             }
@@ -236,6 +251,23 @@ class Vettryx_WP_Core {
 
         update_option( $this->option_name, $active_modules );
         wp_send_json_success();
+    }
+
+    /**
+     * Extrai o slug do módulo a partir do caminho do arquivo
+     * Mapeia corretamente para os slugs retornados pelo Hub
+     */
+    private function extract_module_slug_from_path( $module_path ) {
+        // Extrai o nome do arquivo do módulo (ex: vettryx-wp-essential-seo.php)
+        preg_match( '/modules\/[^\/]+\/(vettryx-wp-[^\/]+)\.php$/', $module_path, $matches );
+        
+        if ( isset( $matches[1] ) ) {
+            return $matches[1];
+        }
+        
+        // Fallback: extrai a pasta do módulo para compatibilidade
+        preg_match( '/modules\/([^\/]+)\/', $module_path, $matches );
+        return isset( $matches[1] ) ? 'vettryx-wp-' . $matches[1] : '';
     }
 
     /**

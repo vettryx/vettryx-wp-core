@@ -279,12 +279,20 @@ class Vettryx_License_Sync {
 
     /**
      * Extrai o slug do módulo a partir do caminho do arquivo
-     * Exemplo: modules/essential-seo/vettryx-wp-essential-seo.php -> essential-seo
+     * Mapeia corretamente para os slugs retornados pelo Hub
+     * Exemplo: modules/essential-seo/vettryx-wp-essential-seo.php -> vettryx-wp-essential-seo
      */
     private function extract_module_slug( $module_path ) {
-        // Extrai o nome da pasta do módulo
-        preg_match( '/modules\/([^\/]+)\//', $module_path, $matches );
-        return isset( $matches[1] ) ? $matches[1] : '';
+        // Extrai o nome do arquivo do módulo (ex: vettryx-wp-essential-seo.php)
+        preg_match( '/modules\/[^\/]+\/(vettryx-wp-[^\/]+)\.php$/', $module_path, $matches );
+        
+        if ( isset( $matches[1] ) ) {
+            return $matches[1];
+        }
+        
+        // Fallback: extrai a pasta do módulo para compatibilidade
+        preg_match( '/modules\/([^\/]+)\/', $module_path, $matches );
+        return isset( $matches[1] ) ? 'vettryx-wp-' . $matches[1] : '';
     }
 }
 

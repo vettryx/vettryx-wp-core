@@ -33,7 +33,10 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if(!response.success) {
-                    alert('Erro de permissão ao salvar módulo.');
+                    let errorMsg = response.data && response.data.message 
+                        ? response.data.message 
+                        : 'Erro de permissão ao salvar módulo.';
+                    alert(errorMsg);
                     checkbox.prop('checked', !isActive); // Reverte o visual em caso de erro
                 }
             },
