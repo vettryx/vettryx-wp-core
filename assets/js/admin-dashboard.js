@@ -73,4 +73,38 @@ jQuery(document).ready(function($) {
         });
     });
 
+    // 3. Lógica do Botão de Sincronização de Licença
+    $('#vtx-sync-license-btn').on('click', function(e) {
+        e.preventDefault();
+        let btn = $(this);
+        let originalText = btn.html();
+
+        btn.html('<span class="dashicons dashicons-update" style="margin-top: 3px;"></span> Sincronizando...').prop('disabled', true);
+
+        $.ajax({
+            url: vtxCore.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'vettryx_sync_license',
+                nonce: vtxCore.nonce
+            },
+            success: function(response) {
+                if(response.success) {
+                    btn.html('<span class="dashicons dashicons-yes-alt" style="margin-top: 3px; color: #00a32a;"></span> Sincronizado!');
+                    // Recarrega a página após 2 segundos
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    btn.html('Erro ao sincronizar').prop('disabled', false);
+                    alert('Erro: ' + response.data.message);
+                }
+            },
+            error: function() {
+                btn.html('Erro de conexão').prop('disabled', false);
+                alert('Erro de conexão ao sincronizar a licença.');
+            }
+        });
+    });
+
 });
